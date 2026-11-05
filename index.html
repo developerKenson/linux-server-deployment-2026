@@ -1,15 +1,61 @@
-ls -l index.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Linux Server Deployment</title>
+    <title>My AWS Cloud Web Application</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 750px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+        }
+        h1 { color: #2563eb; }
+        .service {
+            background: #eff6ff;
+            padding: 12px;
+            margin: 12px 0;
+            border-radius: 8px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to My Linux Server</h1>
-    <p>My Ubuntu EC2 web server is working!</p>
-    <p>Deployed using AWS EC2, Ubuntu, Nginx and GitHub.</p>
+    <div class="container">
+        <h1>Welcome to My AWS Cloud Web Application</h1>
+        <p>My cloud application is successfully running!</p>
+
+        <h2>AWS Services Used</h2>
+
+        <div class="service">
+            <strong>Amazon EC2</strong>
+            <p>Hosts the application on Ubuntu Linux.</p>
+        </div>
+
+        <div class="service">
+            <strong>Amazon S3</strong>
+            <p>Stores application files and objects securely.</p>
+        </div>
+
+        <div class="service">
+            <strong>AWS IAM</strong>
+            <p>Provides secure access through an EC2 IAM role.</p>
+        </div>
+
+        <div class="service">
+            <strong>Amazon VPC</strong>
+            <p>Provides the networking environment.</p>
+        </div>
+
+        <p><strong>Deployment:</strong> Ubuntu, Nginx, GitHub and AWS.</p>
+    </div>
 </body>
 </html>
-
