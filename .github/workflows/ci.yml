@@ -1,5 +1,4 @@
-
-name: Linux Server CI Pipeline
+name: Linux Server CI/CD Pipeline
 
 on:
   push:
@@ -27,3 +26,73 @@ jobs:
 
       - name: CI success message
         run: echo "All website tests passed!"
+
+  docker-build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t linux-server-website:v1 .
+
+      - name: Verify Docker image
+        run: docker image inspect linux-server-website:v1
+
+  deploy:
+    name: Deploy Website to AWS EC2
+    runs-on: ubuntu-latest
+    needs: [test, docker-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Configure SSH
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "$EC2_SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          ssh-keyscan -t ed25519 -H "$EC2_HOST" > ~/.ssh/known_hosts
+
+          EXPECTED="SHA256:jnLztH7zyY1ANoWmuNac8xVms483igssZaqj6J/1NJ4"
+          ACTUAL=$(ssh-keygen -lf ~/.ssh/known_hosts -E sha256 | awk '{print $2}')
+
+          echo "$ACTUAL" | grep -Fx "$EXPECTED"
+
+      - name: Deploy to EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            -o IdentitiesOnly=yes \
+            "$EC2_USER@$EC2_HOST" 'bash -s' <<'REMOTE'
+              set -e
+
+              cd /home/ubuntu/linux-server-deployment-2026
+
+              git fetch origin main
+              git reset --hard origin/main
+
+              sudo docker build -t linux-server-website:v1 .
+
+              sudo docker rm -f linux-website || true
+
+              sudo docker run -d \
+                --restart unless-stopped \
+                --name linux-website \
+                -p 8080:80 \
+                linux-server-website:v1
+
+              curl -fsS http://localhost:8080/ >/dev/null
+
+              echo "Deployment successful!"
+          REMOTE
